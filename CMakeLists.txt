@@ -275,6 +275,18 @@ if("${FIPS_VERSION}" STREQUAL "v1")
     override_cache(WOLFSSL_TLS13 "no")
 endif()
 
+add_option("WOLFSSL_QUIC"
+    "Enable QUIC API with wolfSSL TLS v1.3 (default: disabled)"
+    "no" "yes;no")
+
+if(WOLFSSL_QUIC)
+    if(NOT WOLFSSL_TLS13)
+        message(FATAL_ERROR "TLS 1.3 is disabled - necessary for QUIC")
+    endif()
+
+    list(APPEND WOLFSSL_DEFINITIONS "-DWOLFSSL_QUIC" "-DHAVE_EX_DATA")
+endif()
+
 # Post-handshake authentication
 add_option("WOLFSSL_POSTAUTH"
     "Enable wolfSSL Post-handshake Authentication (default: disabled)"
@@ -388,6 +400,10 @@ add_option(WOLFSSL_OPENSSLEXTRA
     "Enable extra OpenSSL API, size+ (default: disabled)"
     "no" "yes;no")
 
+if (WOLFSSL_QUIC)
+    override_cache(WOLFSSL_OPENSSLEXTRA "yes")
+endif()
+
 if (WOLFSSL_OPENSSLEXTRA AND NOT WOLFSSL_OPENSSLCOEXIST)
     list(APPEND WOLFSSL_DEFINITIONS
       "-DOPENSSL_EXTRA"
@@ -498,6 +514,10 @@ add_option("WOLFSSL_AESCTR"
 if(WOLFSSL_OPENVPN OR
    WOLFSSL_LIBSSH2 OR
    WOLFSSL_AESSIV)
+    override_cache(WOLFSSL_AESCTR "yes")
+endif()
+
+if(WOLFSSL_QUIC)
     override_cache(WOLFSSL_AESCTR "yes")
 endif()
 
@@ -718,6 +738,10 @@ set(WOLFSSL_CURVE25519_SMALL "no")
 add_option("WOLFSSL_CURVE25519"
     "Enable Curve25519 (default: disabled)"
     "no" "yes;no;small;no128bit")
+
+if(WOLFSSL_QUIC AND NOT WOLFSSL_CURVE25519)
+    override_cache(WOLFSSL_CURVE25519 "yes")
+endif()
 
 if(WOLFSSL_OPENSSH)
     override_cache(WOLFSSL_CURVE25519 "yes")
@@ -1282,10 +1306,18 @@ add_option(WOLFSSL_CRL
 set(WOLFSSL_SNI_HELP_STRING "Enable SNI (default: disabled)")
 add_option(WOLFSSL_SNI ${WOLFSSL_SNI_HELP_STRING} "no" "yes;no")
 
+if(WOLFSSL_QUIC)
+    override_cache(WOLFSSL_SNI "yes")
+endif()
+
 add_option(WOLFSSL_ALPN
     "Enable ALPN (default: disabled)"
     "no" "yes;no"
 )
+
+if(WOLFSSL_QUIC)
+    override_cache(WOLFSSL_ALPN "yes")
+endif()
 
 set(WOLFSSL_TLSX_HELP_STRING "Enable all TLS Extensions (default: disabled)")
 add_option(WOLFSSL_TLSX ${WOLFSSL_TLSX_HELP_STRING} "no" "yes;no")
